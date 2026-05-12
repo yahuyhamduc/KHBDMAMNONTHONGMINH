@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
+    <script>
+      // Fix for "Cannot set property fetch of #<Window> which has only a getter"
+      // This happens when libraries try to polyfill fetch on the global object.
+      // By creating a 'global' object that shadows 'window', we allow libraries to
+      // assign properties like 'fetch' to 'global' without affecting the read-only 'window.fetch'.
+      (function() {
+        if (typeof window !== 'undefined') {
+          try {
+            if (!window.global) {
+              // Create a shim that inherits from window
+              const shim = Object.create(window);
+              
+              // Explicitly define fetch as a writable property on the shim itself
+              // This prevents the assignment from trying to use the window.fetch getter
+              Object.defineProperty(shim, 'fetch', {
+                value: window.fetch.bind(window),
+                writable: true,
+                configurable: true,
+                enumerable: true
+              });
+              
+              window.global = shim;
+            }
+          } catch (e) {
+            console.warn('Could not initialize global shim:', e);
+          }
+        }
+      })();
+    </script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
+
