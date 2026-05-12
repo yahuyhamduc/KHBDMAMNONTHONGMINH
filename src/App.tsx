@@ -209,7 +209,7 @@ if (!isLoggedIn) {
             >
               <GraduationCap className="text-white w-10 h-10" />
             </motion.div>
-            <h1 className="text-3xl font-black text-[#eb1313] tracking-tight mb-2 uppercase">SOẠN KẾ HOẠCH BÀI DẠY MẦM NON THÔNG MINH</h1>
+            <h1 className="text-3xl font-black text-[#eb13d1] tracking-tight mb-2 uppercase border-b-4 border-[#f005e8] pb-1">SOẠN KẾ HOẠCH BÀI DẠY MẦM NON THÔNG MINH</h1>
             <p className="text-blue-600 font-bold text-lg mb-4">Thầy Gia Huy chào mừng bạn đến với AI soạn giảng thông minh</p>
             <p className="text-slate-500 font-medium">Nhập mã kích hoạt để truy cập hệ thống</p>
           </div>

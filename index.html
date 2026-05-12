@@ -1,38 +1,66 @@
 <!doctype html>
 <html lang="en">
   <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My Google AI Studio App</title>
     <script>
-      // Fix for "Cannot set property fetch of #<Window> which has only a getter"
-      // This happens when libraries try to polyfill fetch on the global object.
-      // By creating a 'global' object that shadows 'window', we allow libraries to
-      // assign properties like 'fetch' to 'global' without affecting the read-only 'window.fetch'.
+      // Highly robust shim to fix global and fetch-related runtime errors.
+      // Needs to be THE VERY FIRST thing in <head>.
       (function() {
-        if (typeof window !== 'undefined') {
+        if (typeof window !== "undefined") {
+          // Create the shim object that will serve as 'global' and 'globalThis'
+          // We use Object.create(window) so it inherits all browser globals (HTMLElement, etc.)
+          const globalShim = Object.create(window);
+          
+          // Make fetch writable on the shim to avoid read-only errors on window.fetch
+          // This is critical for libraries like @google/genai that try to polyfill fetch
+          Object.defineProperty(globalShim, "fetch", {
+            value: window.fetch.bind(window),
+            writable: true,
+            configurable: true,
+            enumerable: true
+          });
+          
+          // Self-references for common global names
+          globalShim.global = globalShim;
+          globalShim.window = window;
+          globalShim.self = globalShim;
+          globalShim.globalThis = globalShim;
+          
+          // Expose to window as 'global' and 'globalThis' if possible.
+          // Using Object.defineProperty since direct assignment might fail if they are read-only.
           try {
             if (!window.global) {
-              // Create a shim that inherits from window
-              const shim = Object.create(window);
-              
-              // Explicitly define fetch as a writable property on the shim itself
-              // This prevents the assignment from trying to use the window.fetch getter
-              Object.defineProperty(shim, 'fetch', {
-                value: window.fetch.bind(window),
+              Object.defineProperty(window, "global", {
+                value: globalShim,
                 writable: true,
-                configurable: true,
-                enumerable: true
+                configurable: true
               });
-              
-              window.global = shim;
             }
           } catch (e) {
-            console.warn('Could not initialize global shim:', e);
+            window.global = globalShim; // Fallback
           }
+
+          try {
+            // Note: globalThis is often read-only on window, but let's try.
+            const gtDescriptor = Object.getOwnPropertyDescriptor(window, "globalThis");
+            if (!gtDescriptor || gtDescriptor.configurable) {
+              Object.defineProperty(window, "globalThis", {
+                value: globalShim,
+                writable: true,
+                configurable: true
+              });
+            }
+          } catch (e) {
+            // If we can't redefine window.globalThis, libraries using it might still hit fetch errors
+            // unless we use a Vite define, but we're trying to avoid that due to name collision issues.
+          }
+          
+          window._globalShim = globalShim;
         }
       })();
     </script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Google AI Studio App</title>
   </head>
   <body>
     <div id="root"></div>
